@@ -21,6 +21,7 @@ import extension.allFeaturesImpl
 import extension.allLibrariesImpl
 import extension.allServicesImpl
 import extension.buildConfigFieldStr
+import extension.environmentOrGradleValue
 import extension.locales
 import extension.setupDependencyInjection
 import extension.testCommonDependencies
@@ -44,8 +45,8 @@ android {
     defaultConfig {
         //applicationId = BuildTimeConfig.APPLICATION_ID
         applicationId = "chat.schildi.android"
-        versionCode = 1250
-        versionName = "0.11.7-ex_26_9_4"
+        versionCode = 1260
+        versionName = "0.11.8-ex_26_10_1"
         targetSdk = Versions.TARGET_SDK
 
         // Keep abiFilter for the universalApk
@@ -89,13 +90,14 @@ android {
             storePassword = "android"
         }
         register("nightly") {
-            keyAlias = System.getenv("ELEMENT_ANDROID_NIGHTLY_KEYID")
-                ?: project.property("signing.element.nightly.keyId") as? String?
-            keyPassword = System.getenv("ELEMENT_ANDROID_NIGHTLY_KEYPASSWORD")
-                ?: project.property("signing.element.nightly.keyPassword") as? String?
-            storeFile = file("./signature/nightly.keystore")
-            storePassword = System.getenv("ELEMENT_ANDROID_NIGHTLY_STOREPASSWORD")
-                ?: project.property("signing.element.nightly.storePassword") as? String?
+            keyAlias = environmentOrGradleValue("ELEMENT_ANDROID_NIGHTLY_KEYID", "signing.element.nightly.keyId")
+            keyPassword = environmentOrGradleValue("ELEMENT_ANDROID_NIGHTLY_KEYPASSWORD", "signing.element.nightly.keyPassword")
+            storeFile = file(
+                environmentOrGradleValue("ELEMENT_ANDROID_NIGHTLY_STOREFILE", "signing.element.nightly.storeFile")
+                    ?.ifBlank { null }
+                    ?: "./signature/nightly.keystore"
+            )
+            storePassword = environmentOrGradleValue("ELEMENT_ANDROID_NIGHTLY_STOREPASSWORD", "signing.element.nightly.storePassword")
         }
     }
 
@@ -209,7 +211,7 @@ android {
 // SC: downstream package name and versioning, overriding Element default config while reducing merge conflicts
 val scVersionMajor = 0
 val scVersionMinor = 11
-val scVersionPatch = 7
+val scVersionPatch = 8
 // Following val is set by increment_version.sh based on the values above
 val scVersionMain = "0.7.6"
 android {
@@ -220,8 +222,8 @@ android {
         // Common upstream overrides across all sc variants - only one flavor for this dimension to ensure it's picked up!
         create("sc") {
             dimension = "package"
-            versionCode = 1250
-            versionName = "0.11.7-ex_26_9_4"
+            versionCode = 1260
+            versionName = "0.11.8-ex_26_10_1"
             isDefault = true
         }
         // SC variants for different release tracks. Cannot do actual release types for those since fdroid build tools always want `release` builds.
@@ -347,7 +349,6 @@ dependencies {
     implementation(projects.features.migration.api)
     implementation(projects.appnav)
     implementation(projects.appconfig)
-    implementation(projects.libraries.uiStrings)
     implementation(projects.services.analytics.compose)
 
     if (ModulesConfig.pushProvidersConfig.includeFirebase) {
@@ -365,18 +366,13 @@ dependencies {
     implementation(libs.androidx.splash)
     implementation(libs.androidx.core)
     implementation(libs.androidx.corektx)
-    implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.startup)
     implementation(libs.androidx.preference)
-    implementation(libs.coil)
 
     implementation(platform(libs.network.okhttp.bom))
     implementation(libs.network.okhttp.logging)
-    implementation(libs.serialization.json)
-
-    implementation(libs.matrix.emojibase.bindings)
 
     testCommonDependencies(libs)
     testImplementation(projects.libraries.matrix.test)
@@ -417,6 +413,9 @@ licensee {
     ignoreDependencies("com.github.matrix-org", "matrix-analytics-events")
     // Ignore dependency that are not third-party licenses to us.
     ignoreDependencies(groupId = "io.element.android")
+    // The rustls-platform-verifier dependency does not provide a license file in their maven repo, but there are MIT and Apache licenses in
+    // the source code repo: see https://github.com/rustls/rustls-platform-verifier
+    ignoreDependencies(groupId = "org.rustls", artifactId = "rustls-platform-verifier")
 }
 
 fun Project.configureLicensesTasks(reportingExtension: ReportingExtension) {
