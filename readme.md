@@ -12,6 +12,9 @@ as it lacks some functionality which one might expect from a fully-featured chat
 
 An overview over changes compared to Element X can be found [here](FEATURES.md).
 
+**This fork** adds Matrix room widgets support (widget badge, inline panel, full-screen widget, readable widget events).
+See [WIDGETS.md](WIDGETS.md). The `sc-widgets` branch contains the changes on top of upstream.
+
 <a href="https://f-droid.org/packages/chat.schildi.android" alt="Get it on F-Droid" target="_blank"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="80"></a>
 <a href="https://play.google.com/store/apps/details?id=chat.schildi.android" alt="Get it on Google Play" target="_blank"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" height="80"></a>
 

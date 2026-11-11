@@ -44,6 +44,12 @@
             android:launchMode="singleTask"
             android:taskAffinity="io.element.android.features.call" />
 
+        <activity
+            android:name=".ui.WidgetActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode"
+            android:exported="false"
+            android:label="Виджеты" />
+
         <service
             android:name=".services.CallForegroundService"
             android:enabled="true"

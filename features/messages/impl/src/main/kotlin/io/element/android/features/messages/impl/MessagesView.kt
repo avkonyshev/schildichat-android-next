@@ -12,6 +12,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -156,6 +159,9 @@ fun MessagesView(
     onThreadsListClick: () -> Unit,
     knockRequestsBannerView: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    onWidgetsClick: () -> Unit = {}, // SC: widgets
+    widgetCount: Int = 0, // SC: widgets
+    widgetPanel: @Composable () -> Unit = {}, // SC: widgets
     forceJumpToBottomVisibility: Boolean = false,
     customReactionBottomSheet: @Composable () -> Unit,
 ) {
@@ -267,11 +273,14 @@ fun MessagesView(
                                     displayThreads = state.timelineState.timelineMode !is Timeline.Mode.Thread && state.threads.hasThreads,
                                     roomCallState = state.roomCallState,
                                     onJoinCallClick = onJoinCallClick,
-                                    onThreadsListClick = onThreadsListClick
+                                    onThreadsListClick = onThreadsListClick,
+                                    onWidgetsClick = onWidgetsClick,
+                                    widgetCount = widgetCount,
                                 )
                             }
                         )
                         ScReadMarkerDebug(state.timelineState.scReadState)
+                        widgetPanel() // SC: widgets
                         } // SC wrong indention
                     }
                 },
@@ -493,6 +502,8 @@ internal fun RowScope.MessagesMenuActions(
     onThreadsListClick: () -> Unit,
     state: MessagesState, // SC
     onViewAllPinnedMessagesClick: () -> Unit, // SC
+    onWidgetsClick: () -> Unit = {}, // SC: widgets
+    widgetCount: Int = 0, // SC: widgets
 ) {
     if (displayThreads) {
         Icon(
@@ -501,6 +512,39 @@ internal fun RowScope.MessagesMenuActions(
             contentDescription = stringResource(CommonStrings.common_threads),
         )
         Spacer(Modifier.width(8.dp))
+    }
+    if (widgetCount > 0) {
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.clickable(enabled = true, onClick = onWidgetsClick),
+        ) {
+            Icon(
+                imageVector = CompoundIcons.Link(),
+                contentDescription = "Виджеты",
+            )
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .align(androidx.compose.ui.Alignment.TopEnd)
+                    .offset(x = 6.dp, y = (-4).dp)
+                    .size(14.dp)
+                    .background(androidx.compose.ui.graphics.Color.Red, androidx.compose.foundation.shape.CircleShape),
+                contentAlignment = androidx.compose.ui.Alignment.Center,
+            ) {
+                androidx.compose.material3.Text(
+                    text = widgetCount.toString(),
+                    color = androidx.compose.ui.graphics.Color.White,
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 9.sp,
+                        lineHeight = 9.sp,
+                        platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false),
+                        lineHeightStyle = androidx.compose.ui.text.style.LineHeightStyle(
+                            alignment = androidx.compose.ui.text.style.LineHeightStyle.Alignment.Center,
+                            trim = androidx.compose.ui.text.style.LineHeightStyle.Trim.Both,
+                        ),
+                    ),
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
     }
     CallMenuItem(
         roomCallState = roomCallState,

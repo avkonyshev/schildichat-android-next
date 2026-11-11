@@ -105,6 +105,7 @@ class MessagesNode(
     @ApplicationContext private val context: Context,
     @SessionCoroutineScope private val sessionCoroutineScope: CoroutineScope,
     private val room: JoinedRoom,
+    private val roomWidgetsEntryPoint: io.element.android.features.call.api.RoomWidgetsEntryPoint, // SC: widgets
     private val analyticsService: AnalyticsService,
     messageComposerPresenterFactory: MessageComposerPresenter.Factory,
     timelinePresenterFactory: TimelinePresenter.Factory,
@@ -285,11 +286,35 @@ class MessagesNode(
 
     override fun close() = navigateUp()
 
+    // SC: counts widgets with a non-empty url (removed widgets keep an event with empty content)
+    private suspend fun scCountWidgets(): Int {
+        val ids = mutableSetOf<String>()
+        for (type in listOf("im.vector.modular.widgets", "m.widget")) {
+            for (raw in room.getRawStateEvents(type).getOrNull().orEmpty()) {
+                runCatching {
+                    val event = org.json.JSONObject(raw)
+                    val url = event.optJSONObject("content")?.optString("url").orEmpty()
+                    if (url.startsWith("http")) ids += event.optString("state_key")
+                }
+            }
+        }
+        return ids.size
+    }
+
     @Composable
     override fun View(modifier: Modifier) {
         val activity = requireNotNull(LocalActivity.current)
         val isDark = ElementTheme.isLightTheme.not()
         val state = presenter.present() // SC: moved up for click listener provides
+        // SC: number of widgets in the room, for the badge on the widgets icon
+        var widgetCount by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        var widgetPanelOpen by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(room.roomId, state.timelineState.timelineItems.size) {
+            while (true) {
+                widgetCount = scCountWidgets()
+                kotlinx.coroutines.delay(30_000)
+            }
+        }
         val canUseOverlay = !isTalkbackActive() && !hasExternalKeyboard()
         CompositionLocalProvider(
             LocalTimelineItemPresenterFactories provides timelineItemPresenterFactories,
@@ -402,6 +427,13 @@ class MessagesNode(
                     callback.navigateToRoomCall(room.roomId, isAudioCall)
                 },
                 onViewAllPinnedMessagesClick = callback::navigateToPinnedMessagesList,
+                onWidgetsClick = { widgetPanelOpen = !widgetPanelOpen }, // SC: widgets
+                widgetCount = widgetCount, // SC: widgets
+                widgetPanel = {
+                    if (widgetPanelOpen) {
+                        roomWidgetsEntryPoint.WidgetPanel(room = room, modifier = Modifier, onClose = { widgetPanelOpen = false })
+                    }
+                }, // SC: widgets
                 modifier = modifier,
                 knockRequestsBannerView = {
                     knockRequestsBannerRenderer.View(

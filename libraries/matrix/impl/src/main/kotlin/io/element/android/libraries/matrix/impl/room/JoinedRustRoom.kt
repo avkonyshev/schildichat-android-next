@@ -496,6 +496,40 @@ class JoinedRustRoom(
         }
     }
 
+    override fun getCustomWidgetDriver(widgetSettings: MatrixWidgetSettings): Result<MatrixWidgetDriver> {
+        return runCatchingExceptions {
+            RustWidgetDriver(
+                widgetSettings = widgetSettings,
+                room = innerRoom,
+                widgetCapabilitiesProvider = object : WidgetCapabilitiesProvider {
+                    override suspend fun acquireCapabilities(capabilities: WidgetCapabilities): WidgetCapabilities {
+                        // SC: user-added widgets get no event permissions at all
+                        return WidgetCapabilities(
+                            read = emptyList(),
+                            send = emptyList(),
+                            requiresClient = false,
+                            updateDelayedEvent = false,
+                            sendDelayedEvent = false,
+                            downloadFiles = false,
+                            rtcTransports = false,
+                        )
+                    }
+                },
+            )
+        }
+    }
+
+    override suspend fun getRawStateEvents(eventType: String): Result<List<String>> = withContext(roomDispatcher) {
+        runCatchingExceptions {
+            // Sliding sync does not request widget state events, so the local store is usually empty: fall back to the full room state.
+            innerRoom.getStateEventsRaw(eventType).ifEmpty {
+                innerRoom.fetchFullRoomState().filter { raw ->
+                    runCatching { org.json.JSONObject(raw).optString("type") == eventType }.getOrDefault(false)
+                }
+            }
+        }
+    }
+
     override suspend fun setSendQueueEnabled(enabled: Boolean) {
         withContext(roomDispatcher) {
             Timber.d("setSendQueuesEnabled: $enabled")

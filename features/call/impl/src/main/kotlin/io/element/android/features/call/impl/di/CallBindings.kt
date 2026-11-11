@@ -18,5 +18,6 @@ import io.element.android.features.call.impl.ui.IncomingCallActivity
 interface CallBindings {
     fun inject(callActivity: ElementCallActivity)
     fun inject(callActivity: IncomingCallActivity)
+    fun inject(widgetActivity: io.element.android.features.call.impl.ui.WidgetActivity)
     fun inject(declineCallBroadcastReceiver: DeclineCallBroadcastReceiver)
 }

@@ -46,6 +46,7 @@ class RoomDetailsNode(
     private val room: BaseRoom,
     private val analyticsService: AnalyticsService,
     private val leaveRoomRenderer: LeaveRoomRenderer,
+    private val roomWidgetsEntryPoint: io.element.android.features.call.api.RoomWidgetsEntryPoint,
 ) : Node(buildContext, plugins = plugins), RoomDetailsNavigator {
     interface Callback : Plugin {
         fun navigateBack()
@@ -129,6 +130,7 @@ class RoomDetailsNode(
             invitePeople = callback::navigateToInviteMembers,
             openAvatarPreview = callback::navigateToAvatarPreview,
             openPollHistory = callback::navigateToPollHistory,
+            openWidgets = { roomWidgetsEntryPoint.openWidgets(room.sessionId, room.roomId) },
             openMediaGallery = callback::navigateToMediaGallery,
             openAdminSettings = callback::navigateToAdminSettings,
             onJoinCallClick = callback::navigateToRoomCall,

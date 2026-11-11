@@ -37,6 +37,7 @@ import io.element.android.libraries.matrix.api.timeline.item.event.ProfileDetail
 import io.element.android.libraries.matrix.api.timeline.item.event.RedactedContent
 import io.element.android.libraries.matrix.api.timeline.item.event.RoomMembershipContent
 import io.element.android.libraries.matrix.api.timeline.item.event.StateContent
+import io.element.android.features.messages.impl.timeline.model.event.TimelineItemStateEventContent
 import io.element.android.libraries.matrix.api.timeline.item.event.StickerContent
 import io.element.android.libraries.matrix.api.timeline.item.event.UnableToDecryptContent
 import io.element.android.libraries.matrix.api.timeline.item.event.UnknownContent
@@ -61,7 +62,28 @@ class TimelineItemContentFactory(
     private val dateFormatter: DateFormatter,
     private val stringProvider: StringProvider,
 ) {
+    // SC: readable text for widget state events ("Виджет X был добавлен user") instead of "Custom event ..."
+    private fun scWidgetStateText(item: EventTimelineItem): String? {
+        val state = (item.content as? StateContent)?.content as? io.element.android.libraries.matrix.api.timeline.item.event.OtherState.Custom
+            ?: return null
+        if (state.eventType != "im.vector.modular.widgets" && state.eventType != "m.widget") return null
+        return runCatching {
+            val json = org.json.JSONObject(item.timelineItemDebugInfoProvider().originalJson ?: return null)
+            val content = json.optJSONObject("content")
+            val prev = json.optJSONObject("unsigned")?.optJSONObject("prev_content")
+            fun name(c: org.json.JSONObject?) = c?.optString("name").orEmpty().ifEmpty { c?.optString("type").orEmpty() }.ifEmpty { "Custom" }
+            fun exists(c: org.json.JSONObject?) = c != null && c.optString("url").isNotEmpty()
+            val who = item.senderProfile.getDisambiguatedDisplayName(item.sender)
+            when {
+                !exists(content) -> "Виджет ${name(prev)} был удалён $who"
+                !exists(prev) -> "Виджет ${name(content)} был добавлен $who"
+                else -> "Виджет ${name(content)} был изменён $who"
+            }
+        }.getOrNull()
+    }
+
     suspend fun create(eventTimelineItem: EventTimelineItem, roomMembers: List<RoomMember>): TimelineItemEventContent {
+        scWidgetStateText(eventTimelineItem)?.let { return TimelineItemStateEventContent(it) }
         return create(
             itemContent = eventTimelineItem.content,
             eventId = eventTimelineItem.eventId,

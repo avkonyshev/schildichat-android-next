@@ -262,6 +262,17 @@ interface JoinedRoom : BaseRoom {
     fun getWidgetDriver(widgetSettings: MatrixWidgetSettings): Result<MatrixWidgetDriver>
 
     /**
+     * Get a [MatrixWidgetDriver] for a user-added (non Element Call) widget. No room event permissions are granted to it.
+     */
+    fun getCustomWidgetDriver(widgetSettings: MatrixWidgetSettings): Result<MatrixWidgetDriver> =
+        Result.failure(UnsupportedOperationException())
+
+    /**
+     * Get the raw JSON of all the state events of the given type in this room.
+     */
+    suspend fun getRawStateEvents(eventType: String): Result<List<String>> = Result.success(emptyList())
+
+    /**
      * Enables or disables the send queue of this room only; see [io.element.android.libraries.matrix.api.MatrixClient.setAllSendQueuesEnabled]
      * for the session-wide equivalent and for why a queue disables itself.
      *

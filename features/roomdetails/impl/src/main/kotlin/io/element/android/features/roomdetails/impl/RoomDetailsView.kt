@@ -123,6 +123,7 @@ fun RoomDetailsView(
     onSecurityAndPrivacyClick: () -> Unit,
     onProfileClick: (UserId) -> Unit,
     onReportRoomClick: () -> Unit,
+    openWidgets: () -> Unit = {},
     modifier: Modifier = Modifier,
     leaveRoomView: @Composable () -> Unit,
 ) {
@@ -250,6 +251,11 @@ fun RoomDetailsView(
                 )
                 PollsItem(
                     openPollHistory = openPollHistory
+                )
+                ListItem(
+                    content = { Text("Виджеты") },
+                    leadingContent = ListItemContent.Icon(IconSource.Vector(CompoundIcons.Link())),
+                    onClick = openWidgets,
                 )
             }
             when (state.roomType) {
