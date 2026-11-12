@@ -1,0 +1,84 @@
+name: Build APK
+
+# Builds an installable (debug-signed) APK of this fork with room widgets support.
+# - Manual run:  Actions -> Build APK -> Run workflow (APK is attached as a workflow artifact).
+# - Release:     push a tag like v0.11.8-widgets.1 (APKs are attached to a GitHub Release).
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.repository != 'SchildiChat/schildichat-android-next'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write # needed only to create the GitHub Release for tags
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/lib/node_modules || true
+          df -h "$GITHUB_WORKSPACE"
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: false # the private "enterprise" submodule is not needed
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: '15859902'
+          packages: ''
+
+      - name: Install Android SDK 37
+        run: |
+          android sdk install platform-tools
+          android sdk install platforms/android-37.0
+          android sdk install build-tools/37.0.0
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK (F-Droid flavour)
+        run: |
+          ./gradlew :app:assembleFdroidScDefaultDebug --no-daemon --max-workers=2 --stacktrace \
+            -Pkotlin.compiler.execution.strategy=in-process \
+            -Dorg.gradle.internal.http.connectionTimeout=120000 \
+            -Dorg.gradle.internal.http.socketTimeout=120000
+
+      - name: Collect APKs
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/fdroidScDefault/debug/app-fdroid-sc-default-arm64-v8a-debug.apk dist/schildichat-widgets-arm64-v8a.apk
+          cp app/build/outputs/apk/fdroidScDefault/debug/app-fdroid-sc-default-armeabi-v7a-debug.apk dist/schildichat-widgets-armeabi-v7a.apk
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schildichat-widgets-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/*.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG" \
+            --notes "Debug-signed APKs of SchildiChat Android Next with Matrix room widgets support. See WIDGETS.md. Debug builds are signed with a throw-away key, so uninstall before installing a build from a different release."
