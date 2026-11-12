@@ -81,4 +81,4 @@ jobs:
           gh release create "$TAG" dist/*.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "$TAG" \
-            --notes "Debug-signed APKs of SchildiChat Android Next with Matrix room widgets support. See WIDGETS.md. Debug builds are signed with a throw-away key, so uninstall before installing a build from a different release."
+            --notes "Debug-signed APKs of SchildiChat Android Next with Matrix room widgets support. See WIDGETS.md. They are signed with the public debug key from the repository (app/signature/debug.keystore), the same for every build, so a new build installs over the previous one. This is not a private release key."
