@@ -1,8 +1,22 @@
-# Room widgets support
+# Matrix room widgets on Android: mini apps and business buttons in chat
 
 This fork adds support for Matrix [room widgets](https://spec.matrix.org/latest/client-server-api/#widget-api)
 (the `im.vector.modular.widgets` state events, as used by Element Web/Desktop) to SchildiChat Android Next.
 Upstream does not show or open generic room widgets.
+
+## What is a widget
+
+A widget is a web page embedded in a Matrix room, similar to a **Telegram Mini App (WebApp)**. You host a page,
+add it to a room, and it opens inside the chat on Android. It talks to the room through the Matrix Widget API,
+so it can show data and trigger actions without any change to the client.
+
+## Use cases
+
+- **Business buttons in chat:** approving orders, purchase requests and **expense / payment requests**
+  ("Approve" / "Reject"), leave requests, incident acknowledgement.
+- **Buttons that call your backend** (CRM, ERP, 1C, home automation) as the logged-in Matrix user.
+  The user is verified with Matrix OpenID, so the backend does not need its own login.
+- **Dashboards, forms, polls, checklists** shown next to the conversation.
 
 ## What it does
 

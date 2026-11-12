@@ -12,8 +12,24 @@ as it lacks some functionality which one might expect from a fully-featured chat
 
 An overview over changes compared to Element X can be found [here](FEATURES.md).
 
-**This fork** adds Matrix room widgets support (widget badge, inline panel, full-screen widget, readable widget events).
+## Matrix widgets for Android: mini apps and business buttons inside chat rooms
+
+**This fork** adds Matrix room widgets support to SchildiChat Android Next (widget badge, inline panel, full-screen widget, readable widget events).
 See [WIDGETS.md](WIDGETS.md). The `sc-widgets` branch contains the changes on top of upstream.
+
+A Matrix widget is a small web app embedded in a chat room, much like a **Telegram Mini App / WebApp** or a Slack app:
+any web page you host can be shown inside the room and can talk to the room through the Matrix Widget API.
+No app update and no native code is needed to add new functionality, you only publish a web page.
+
+What you can build with it:
+- **Business buttons and approval flows in chat:** order approval, purchase requests, **expense / payment request approval** ("Approve" / "Reject" buttons),
+  leave requests, shift handover, incident acknowledgement.
+- **Action buttons** that call your own backend (CRM, ERP, 1C, home automation) on behalf of the logged-in Matrix user,
+  with identity verified through Matrix OpenID.
+- **Dashboards, forms, polls, checklists and small tools** that live next to the conversation.
+
+Typical use: a team, a department or a company running its own Matrix server who wants Telegram-style mini apps and
+approval buttons in a self-hosted, end-to-end encrypted messenger.
 
 <a href="https://f-droid.org/packages/chat.schildi.android" alt="Get it on F-Droid" target="_blank"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="80"></a>
 <a href="https://play.google.com/store/apps/details?id=chat.schildi.android" alt="Get it on Google Play" target="_blank"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" height="80"></a>
